@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>OnStage — Impromptu Practice</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #0D1117;
+      --surface: #161B22;
+      --border: #21262D;
+      --text: #F0F0F0;
+      --muted: #8B949E;
+      --accent: #FF6B6B;
+      --accent-dim: rgba(255, 107, 107, 0.12);
+      --green: #3FB950;
+      --green-dim: rgba(63, 185, 80, 0.12);
+    }
+
+    body {
+      font-family: 'Space Grotesk', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      padding: 18px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+      z-index: 10;
+    }
+
+    .logo {
+      font-size: 1rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      color: var(--text);
+    }
+
+    .logo span {
+      color: var(--accent);
+    }
+
+    .streak {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.85rem;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .streak-flame {
+      font-size: 1rem;
+    }
+
+    .streak-count {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    /* Main card */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 48px 40px;
+      width: 100%;
+      max-width: 580px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 32px;
+      margin-top: 60px;
+    }
+
+    /* Stage label */
+    .stage-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    /* Topic display */
+    .topic-wrapper {
+      text-align: center;
+      width: 100%;
+    }
+
+    .topic-eyebrow {
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+
+    .topic-text {
+      font-size: clamp(2rem, 6vw, 3rem);
+      font-weight: 700;
+      line-height: 1.15;
+      color: var(--text);
+      min-height: 3.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .topic-text.empty {
+      color: var(--border);
+    }
+
+    /* Timer */
+    .timer-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+    }
+
+    .timer-display {
+      font-size: 3.5rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--text);
+      font-variant-numeric: tabular-nums;
+      transition: color 0.3s;
+    }
+
+    .timer-display.urgent {
+      color: var(--accent);
+    }
+
+    .timer-bar-track {
+      width: 100%;
+      height: 3px;
+      background: var(--border);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+
+    .timer-bar-fill {
+      height: 100%;
+      width: 100%;
+      background: var(--accent);
+      border-radius: 99px;
+      transition: width 1s linear, background 0.3s;
+      transform-origin: left;
+    }
+
+    .timer-bar-fill.safe {
+      background: var(--green);
+    }
+
+    /* Buttons */
+    .btn-row {
+      display: flex;
+      gap: 12px;
+      width: 100%;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 14px 20px;
+      border-radius: 12px;
+      border: none;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+      letter-spacing: 0.02em;
+    }
+
+    .btn:active {
+      transform: scale(0.97);
+    }
+
+    .btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-topic {
+      background: var(--border);
+      color: var(--text);
+    }
+
+    .btn-topic:hover:not(:disabled) {
+      background: #2D333B;
+    }
+
+    .btn-record {
+      background: var(--accent);
+      color: #fff;
+      flex: 2;
+    }
+
+    .btn-record:hover:not(:disabled) {
+      opacity: 0.88;
+    }
+
+    .btn-record.recording {
+      background: var(--green);
+      animation: pulse 1.8s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(63, 185, 80, 0.4); }
+      50% { box-shadow: 0 0 0 8px rgba(63, 185, 80, 0); }
+    }
+
+    /* Transcript box */
+    .transcript-section {
+      width: 100%;
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .transcript-section.visible {
+      display: flex;
+    }
+
+    .section-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .transcript-box {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      font-size: 0.9rem;
+      line-height: 1.6;
+      color: var(--text);
+      min-height: 80px;
+      white-space: pre-wrap;
+    }
+
+    /* Feedback section */
+    .feedback-section {
+      width: 100%;
+      display: none;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .feedback-section.visible {
+      display: flex;
+    }
+
+    .score-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .score-pill {
+      flex: 1;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 12px;
+      text-align: center;
+    }
+
+    .score-pill .score-num {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .score-pill .score-label {
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .feedback-box {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px;
+      font-size: 0.88rem;
+      line-height: 1.7;
+      color: var(--text);
+      white-space: pre-wrap;
+    }
+
+    .loading-text {
+      font-size: 0.85rem;
+      color: var(--muted);
+      text-align: center;
+      padding: 16px;
+      animation: blink 1.2s ease-in-out infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    /* Status message */
+    .status {
+      font-size: 0.8rem;
+      color: var(--muted);
+      text-align: center;
+      min-height: 1.2em;
+    }
+
+    @media (max-width: 480px) {
+      .card {
+        padding: 32px 24px;
+        gap: 24px;
+      }
+      .score-row {
+        flex-wrap: wrap;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo">On<span>Stage</span></div>
+    <div class="streak">
+      <span class="streak-flame">🔥</span>
+      <span class="streak-count" id="streakCount">0</span>
+      <span>day streak</span>
+    </div>
+  </header>
+
+  <div class="card">
+    <span class="stage-label">Impromptu Practice</span>
+
+    <!-- Topic -->
+    <div class="topic-wrapper">
+      <div class="topic-eyebrow">Your topic</div>
+      <div class="topic-text empty" id="topicText">— press generate —</div>
+    </div>
+
+    <!-- Timer -->
+    <div class="timer-wrapper">
+      <div class="timer-display" id="timerDisplay">1:00</div>
+      <div class="timer-bar-track">
+        <div class="timer-bar-fill safe" id="timerBar"></div>
+      </div>
+    </div>
+
+    <!-- Buttons -->
+    <div class="btn-row">
+      <button class="btn btn-topic" id="topicBtn">New topic</button>
+      <button class="btn btn-record" id="recordBtn" disabled>Start speaking</button>
+    </div>
+
+    <div class="status" id="statusMsg">Generate a topic to begin.</div>
+
+    <!-- Transcript -->
+    <div class="transcript-section" id="transcriptSection">
+      <div class="section-label">What you said</div>
+      <div class="transcript-box" id="transcriptBox"></div>
+    </div>
+
+    <!-- Feedback -->
+    <div class="feedback-section" id="feedbackSection">
+      <div class="section-label">Your score</div>
+      <div class="score-row">
+        <div class="score-pill">
+          <div class="score-num" id="scoreClarity">—</div>
+          <div class="score-label">Clarity</div>
+        </div>
+        <div class="score-pill">
+          <div class="score-num" id="scoreStructure">—</div>
+          <div class="score-label">Structure</div>
+        </div>
+        <div class="score-pill">
+          <div class="score-num" id="scoreConfidence">—</div>
+          <div class="score-label">Confidence</div>
+        </div>
+        <div class="score-pill">
+          <div class="score-num" id="scoreFillers">—</div>
+          <div class="score-label">Fillers</div>
+        </div>
+      </div>
+      <div class="section-label">Feedback</div>
+      <div class="feedback-box" id="feedbackBox"></div>
+    </div>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
