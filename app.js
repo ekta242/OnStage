@@ -1,6 +1,13 @@
 
-const GEMINI_API_KEY = "API_KEY_HERE"; // Replace with your Gemini API key
-
+function getApiKey() {
+  let key = localStorage.getItem("gemini_key");
+  if (!key) {
+    key = prompt("Paste your Gemini API key:");
+    if (key) localStorage.setItem("gemini_key", key);
+  }
+  return key;
+}
+const GEMINI_API_KEY = getApiKey();
 // ── TOPICS ──────────────────────────────────────────────
 const topics = [
   "Social media is making us lonelier",
